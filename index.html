@@ -1,57 +1,59 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Responsive IFrame</title>
+    <title>Fullscreen IFrame</title>
     <style>
         body {
             margin: 0;
             overflow: hidden;
         }
+
         iframe {
             position: absolute;
+            top: 0;
+            left: 0;
             border: none; /* 移除边框 */
-            display: block; /* 确保显示 */
-            visibility: visible; /* 确保 iframe 可见 */
-        }
-        .landscape-screen {
+            width: 100vw; /* 默认全宽 */
+            height: 100vh; /* 默认全高 */
             transform-origin: top left;
+            background: white; /* 防止黑屏 */
+        }
+
+        .landscape-screen {
             transform: rotate(90deg) translateY(-100%);
-            background: white; /* 确保背景不是透明的 */
-            overflow: hidden; /* 防止内容溢出 */
+            width: 100vh; /* 调整为屏幕的高度 */
+            height: 100vw; /* 调整为屏幕的宽度 */
         }
     </style>
 </head>
 <body>
     <iframe id="Frame" src="game.html"></iframe>
     <script>
-        // 更新宽高和样式
+        // 获取设备方向并更新 iframe
         function updateFrameOrientation() {
             const Frame = document.getElementById("Frame");
             const isPortrait = window.matchMedia("(orientation: portrait)").matches;
 
             if (isPortrait) {
-                // 竖屏时
-                Frame.width = window.innerHeight; // 宽度变成窗口的高度
-                Frame.height = window.innerWidth; // 高度变成窗口的宽度
-                Frame.classList.add("landscape-screen"); // 添加旋转样式
+                // 竖屏时，旋转并调整宽高
+                Frame.style.width = `${window.innerHeight}px`; // 宽度=屏幕高度
+                Frame.style.height = `${window.innerWidth}px`; // 高度=屏幕宽度
+                Frame.classList.add("landscape-screen");
             } else {
-                // 横屏时
-                Frame.width = window.innerWidth; // 正常设置宽度
-                Frame.height = window.innerHeight; // 正常设置高度
-                Frame.classList.remove("landscape-screen"); // 移除旋转样式
+                // 横屏时，设置为正常宽高
+                Frame.style.width = `${window.innerWidth}px`;
+                Frame.style.height = `${window.innerHeight}px`;
+                Frame.classList.remove("landscape-screen");
             }
         }
 
-        // 初始化时调用
+        // 页面加载时初始化
         window.onload = updateFrameOrientation;
 
-        // 监听屏幕旋转事件
+        // 屏幕大小或方向变化时触发
         window.addEventListener("resize", updateFrameOrientation);
-
-        // 兼容部分设备上屏幕方向获取不准的情况
         window.addEventListener("orientationchange", updateFrameOrientation);
     </script>
 </body>
