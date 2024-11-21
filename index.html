@@ -1,60 +1,104 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fullscreen IFrame</title>
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-        }
-
-        iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            border: none; /* 移除边框 */
-            width: 100vw; /* 默认全宽 */
-            height: 100vh; /* 默认全高 */
-            transform-origin: top left;
-            background: white; /* 防止黑屏 */
-        }
-
-        .landscape-screen {
-            transform: rotate(90deg) translateY(-100%);
-            width: 100vh; /* 调整为屏幕的高度 */
-            height: 100vw; /* 调整为屏幕的宽度 */
-        }
-    </style>
-</head>
-<body>
-    <iframe id="Frame" src="game.html"></iframe>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Unity WebGL Player | SpiderNightmare</title>
+    <link rel="shortcut icon" href="TemplateData/favicon.ico">
+    <link rel="stylesheet" href="TemplateData/style.css">
+    <link rel="manifest" href="manifest.webmanifest">
+  </head>
+  <body>
+    <div id="unity-container">
+      <canvas id="unity-canvas" width=900 height=600 tabindex="-1"></canvas>
+      <div id="unity-loading-bar">
+        <div id="unity-logo"></div>
+        <div id="unity-progress-bar-empty">
+          <div id="unity-progress-bar-full"></div>
+        </div>
+      </div>
+      <div id="unity-warning"> </div>
+    </div>
     <script>
-        // 获取设备方向并更新 iframe
-        function updateFrameOrientation() {
-            const Frame = document.getElementById("Frame");
-            const isPortrait = window.matchMedia("(orientation: portrait)").matches;
-
-            if (isPortrait) {
-                // 竖屏时，旋转并调整宽高
-                Frame.style.width = `${window.innerHeight}px`; // 宽度=屏幕高度
-                Frame.style.height = `${window.innerWidth}px`; // 高度=屏幕宽度
-                Frame.classList.add("landscape-screen");
-            } else {
-                // 横屏时，设置为正常宽高
-                Frame.style.width = `${window.innerWidth}px`;
-                Frame.style.height = `${window.innerHeight}px`;
-                Frame.classList.remove("landscape-screen");
-            }
+      window.addEventListener("load", function () {
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.register("ServiceWorker.js");
         }
+      });
 
-        // 页面加载时初始化
-        window.onload = updateFrameOrientation;
+      var container = document.querySelector("#unity-container");
+      var canvas = document.querySelector("#unity-canvas");
+      var loadingBar = document.querySelector("#unity-loading-bar");
+      var progressBarFull = document.querySelector("#unity-progress-bar-full");
+      var warningBanner = document.querySelector("#unity-warning");
 
-        // 屏幕大小或方向变化时触发
-        window.addEventListener("resize", updateFrameOrientation);
-        window.addEventListener("orientationchange", updateFrameOrientation);
+      // Shows a temporary message banner/ribbon for a few seconds, or
+      // a permanent error message on top of the canvas if type=='error'.
+      // If type=='warning', a yellow highlight color is used.
+      // Modify or remove this function to customize the visually presented
+      // way that non-critical warnings and error messages are presented to the
+      // user.
+      function unityShowBanner(msg, type) {
+        function updateBannerVisibility() {
+          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+        }
+        var div = document.createElement('div');
+        div.innerHTML = msg;
+        warningBanner.appendChild(div);
+        if (type == 'error') div.style = 'background: red; padding: 10px;';
+        else {
+          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+          setTimeout(function() {
+            warningBanner.removeChild(div);
+            updateBannerVisibility();
+          }, 5000);
+        }
+        updateBannerVisibility();
+      }
+
+      // var buildUrl = "Build";
+      var buildUrl = "Build0.034bb";
+      var loaderUrl = buildUrl + "/SpiderGL.loader.js";
+      var config = {
+        dataUrl: buildUrl + "/SpiderGL.data",
+        frameworkUrl: buildUrl + "/SpiderGL.framework.js",
+        codeUrl: buildUrl + "/SpiderGL.wasm",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "Playtwist",
+        productName: "SpiderNightmare",
+        productVersion: "0.034b",
+        showBanner: unityShowBanner,
+      };
+
+      // By default Unity keeps WebGL canvas render target size matched with
+      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
+      // Set this to false if you want to decouple this synchronization from
+      // happening inside the engine, and you would instead like to size up
+      // the canvas DOM size and WebGL render target sizes yourself.
+      // config.matchWebGLToCanvasSize = false;
+
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        // Mobile device style: fill the whole browser client area with the game canvas:
+        var meta = document.createElement('meta');
+        meta.name = 'viewport';
+        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+        document.getElementsByTagName('head')[0].appendChild(meta);
+      }
+
+      loadingBar.style.display = "block";
+
+      var script = document.createElement("script");
+      script.src = loaderUrl;
+      script.onload = () => {
+        createUnityInstance(canvas, config, (progress) => {
+          progressBarFull.style.width = 100 * progress + "%";
+        }).then((unityInstance) => {
+          loadingBar.style.display = "none";
+        }).catch((message) => {
+          alert(message);
+        });
+      };
+      document.body.appendChild(script);
     </script>
-</body>
+  </body>
 </html>
