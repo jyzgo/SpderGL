@@ -1,4 +1,4 @@
-const cacheName = "Playtwist-SpiderNightmare-0.053b";
+const cacheName = "Playtwist-SpiderNightmare-0.054b";
 const contentToCache = [
     "Build/SpiderGL.loader.js",
     "Build/SpiderGL.framework.js",
